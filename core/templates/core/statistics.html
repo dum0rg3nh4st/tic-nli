@@ -1,0 +1,53 @@
+{% extends "core/base.html" %}
+{% block title %}Статистика{% endblock %}
+{% block content %}
+  <h1 class="mb-3">Распределение по категориям</h1>
+  <p class="text-muted">Всего классификаций: {{ total_classifications }}</p>
+  {% if total_classifications %}
+    <div class="row">
+      <div class="col-lg-6">
+        <canvas id="catChart" height="260"></canvas>
+      </div>
+      <div class="col-lg-6">
+        <ul class="list-group">
+          {% for row in rows %}
+            <li class="list-group-item d-flex justify-content-between">
+              <span>{{ row.category__name }}</span>
+              <span class="badge bg-primary rounded-pill">{{ row.total }}</span>
+            </li>
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% else %}
+    <div class="alert alert-warning">Пока нет данных для диаграммы.</div>
+  {% endif %}
+{% endblock %}
+{% block extra_js %}
+  {% if total_classifications %}
+    {{ chart_payload|json_script:"chart-payload" }}
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.2/dist/chart.umd.min.js"></script>
+    <script>
+      var payload = JSON.parse(document.getElementById('chart-payload').textContent);
+      var ctx = document.getElementById('catChart');
+      new Chart(ctx, {
+        type: 'pie',
+        data: {
+          labels: payload.labels,
+          datasets: [{
+            data: payload.data,
+            backgroundColor: [
+              '#0d6efd', '#6610f2', '#6f42c1', '#d63384', '#dc3545',
+              '#fd7e14', '#ffc107', '#198754', '#20c997', '#0dcaf0'
+            ]
+          }]
+        },
+        options: {
+          plugins: {
+            legend: {position: 'bottom'}
+          }
+        }
+      });
+    </script>
+  {% endif %}
+{% endblock %}

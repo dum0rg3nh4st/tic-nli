@@ -1,0 +1,63 @@
+{% extends "core/base.html" %}
+{% block title %}Классификация — RuBERT{% endblock %}
+{% block content %}
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      <h1 class="mb-3">Классификация текста</h1>
+           <p class="text-muted">
+        {% if ml_backend == "embedding" %}
+          Режим: эмбеддинги RuBERT и сходство с формулировками категорий (экономнее по памяти).
+        {% else %}
+          Режим: мультиязычный zero-shot NLI — лучше различает смысл (например жалоба и информационный запрос), если у категорий есть понятные названия и описания.
+        {% endif %}
+      </p>
+
+      {% if not can_classify %}
+        <div class="alert alert-info">
+          Ваша роль допускает только просмотр истории и статистики. Обратитесь к администратору,
+          если нужен доступ к отправке текстов.
+        </div>
+      {% else %}
+        <form method="post" id="classify-form" novalidate>
+          {% csrf_token %}
+          <div class="mb-3">
+            {{ form.content.label_tag }}
+            {{ form.content }}
+            {% if form.content.errors %}
+              <div class="invalid-feedback d-block">{{ form.content.errors }}</div>
+            {% endif %}
+          </div>
+          <button type="submit" class="btn btn-primary" id="submit-btn">
+            <span class="submit-label">Классифицировать</span>
+            <span class="spinner-border spinner-border-sm ms-2 d-none" id="submit-spinner" role="status"></span>
+          </button>
+        </form>
+      {% endif %}
+
+      {% if result %}
+        <div class="card mt-4 border-success">
+          <div class="card-header bg-success text-white">Результат</div>
+          <div class="card-body">
+            <p class="mb-1"><strong>Категория:</strong> {{ result.category.name }}</p>
+            <p class="mb-1"><strong>Уверенность:</strong> {{ result.confidence|floatformat:4 }}</p>
+            <p class="mb-0"><a href="{% url 'core:detail' result.record_id %}">Открыть запись</a></p>
+          </div>
+        </div>
+      {% endif %}
+    </div>
+  </div>
+{% endblock %}
+{% block extra_js %}
+  <script>
+    (function () {
+      var form = document.getElementById('classify-form');
+      if (!form) return;
+      form.addEventListener('submit', function () {
+        var btn = document.getElementById('submit-btn');
+        var sp = document.getElementById('submit-spinner');
+        btn.disabled = true;
+        sp.classList.remove('d-none');
+      });
+    })();
+  </script>
+{% endblock %}

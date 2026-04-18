@@ -1,0 +1,21 @@
+{% extends "core/base.html" %}
+{% block title %}{% if object %}Редактирование{% else %}Новая категория{% endif %}{% endblock %}
+{% block content %}
+  <h1 class="mb-3">{% if object %}Редактировать категорию{% else %}Новая категория{% endif %}</h1>
+  <form method="post" class="col-lg-6">
+    {% csrf_token %}
+    {{ form.non_field_errors }}
+    <div class="mb-3">
+      <label class="form-label" for="id_name">Название</label>
+      {{ form.name }}
+      {{ form.name.errors }}
+    </div>
+    <div class="mb-3">
+      <label class="form-label" for="id_description">Описание</label>
+      {{ form.description }}
+      {{ form.description.errors }}
+    </div>
+    <button type="submit" class="btn btn-primary">Сохранить</button>
+    <a class="btn btn-link" href="{% url 'core:category_list' %}">Отмена</a>
+  </form>
+{% endblock %}

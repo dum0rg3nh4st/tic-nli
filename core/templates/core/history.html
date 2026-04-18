@@ -1,0 +1,69 @@
+{% extends "core/base.html" %}
+{% block title %}История{% endblock %}
+{% block content %}
+  <h1 class="mb-3">История классификаций</h1>
+  <form method="get" class="row g-2 align-items-end mb-4">
+    <div class="col-md-4">
+      <label class="form-label">{{ filter_form.category.label }}</label>
+      {{ filter_form.category }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ filter_form.date_from.label }}</label>
+      {{ filter_form.date_from }}
+    </div>
+    <div class="col-md-3">
+      <label class="form-label">{{ filter_form.date_to.label }}</label>
+      {{ filter_form.date_to }}
+    </div>
+    <div class="col-md-2">
+      <button type="submit" class="btn btn-primary w-100">Фильтр</button>
+    </div>
+  </form>
+
+  <div class="table-responsive">
+    <table class="table table-striped table-hover">
+      <thead>
+      <tr>
+        <th>#</th>
+        <th>Фрагмент</th>
+        <th>Категория</th>
+        <th>Уверенность</th>
+        <th>Автор</th>
+        <th>Дата</th>
+        <th></th>
+      </tr>
+      </thead>
+      <tbody>
+      {% for r in records %}
+        <tr>
+          <td>{{ r.pk }}</td>
+          <td>{{ r.content|truncatechars:80 }}</td>
+          <td>{{ r.classification.category.name }}</td>
+          <td>{{ r.classification.confidence|floatformat:4 }}</td>
+          <td>{{ r.user.username }}</td>
+          <td>{{ r.created_at|date:"d.m.Y H:i" }}</td>
+          <td><a class="btn btn-sm btn-outline-secondary" href="{% url 'core:detail' r.pk %}">Подробнее</a></td>
+        </tr>
+      {% empty %}
+        <tr>
+          <td colspan="7" class="text-center text-muted">Записей пока нет</td>
+        </tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if is_paginated %}
+    <nav>
+      <ul class="pagination">
+        {% if page_obj.has_previous %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}">Назад</a></li>
+        {% endif %}
+        <li class="page-item disabled"><span class="page-link">Стр. {{ page_obj.number }} из {{ paginator.num_pages }}</span></li>
+        {% if page_obj.has_next %}
+          <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if filter_query %}&{{ filter_query }}{% endif %}">Вперёд</a></li>
+        {% endif %}
+      </ul>
+    </nav>
+  {% endif %}
+{% endblock %}
