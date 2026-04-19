@@ -7,6 +7,11 @@ app_name = "core"
 urlpatterns = [
     path("", views.index, name="index"),
     path("history/", views.TextRecordListView.as_view(), name="history"),
+    path(
+        "history/clear/",
+        views.clear_classification_history,
+        name="history_clear",
+    ),
     path("record/<int:pk>/", views.TextRecordDetailView.as_view(), name="detail"),
     path("statistics/", views.StatisticsView.as_view(), name="statistics"),
     path("categories/", views.CategoryListView.as_view(), name="category_list"),

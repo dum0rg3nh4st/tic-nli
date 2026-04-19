@@ -9,6 +9,7 @@ from django.db.models import Count
 from django.http import HttpResponseForbidden
 from django.shortcuts import redirect, render
 from django.urls import reverse_lazy
+from django.views.decorators.http import require_POST
 from django.views.generic import CreateView, DetailView, ListView, UpdateView
 
 from .forms import CategoryForm, HistoryFilterForm, TextClassificationForm
@@ -81,6 +82,38 @@ def index(request):
     )
 
 
+@login_required
+@require_POST
+def clear_classification_history(request):
+    """Удаляет записи текущего пользователя или всю историю (только для аналитика)."""
+    clear_all = request.POST.get("scope") == "all"
+    if clear_all and not can_manage_categories(request.user):
+        return HttpResponseForbidden(
+            "У вас нет права удалять всю историю классификаций."
+        )
+
+    if clear_all:
+        qs = TextRecord.objects.filter(classification__isnull=False)
+        n = qs.count()
+        if n:
+            qs.delete()
+            messages.success(request, f"Из истории удалено записей: {n}.")
+        else:
+            messages.info(request, "История классификаций уже пуста.")
+    else:
+        qs = TextRecord.objects.filter(
+            user=request.user,
+            classification__isnull=False,
+        )
+        n = qs.count()
+        if n:
+            qs.delete()
+            messages.success(request, f"Удалено записей из вашей истории: {n}.")
+        else:
+            messages.info(request, "У вас нет записей в истории классификаций.")
+    return redirect("core:history")
+
+
 class TextRecordListView(LoginRequiredMixin, ListView):
     model = TextRecord
     template_name = "core/history.html"
@@ -112,6 +145,7 @@ class TextRecordListView(LoginRequiredMixin, ListView):
         q = self.request.GET.copy()
         q.pop("page", None)
         ctx["filter_query"] = q.urlencode()
+        ctx["can_clear_all_history"] = can_manage_categories(self.request.user)
         return ctx
 
 
